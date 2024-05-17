@@ -18,7 +18,7 @@ export function AddCandidate() {
     console.log("Form submitted", formData);
 
     try {
-      const response = await fetch("https://deployfastapi.azurewebsites.net/Record", {
+      const response = await fetch("https://iscsfastapi.azurewebsites.net/Record", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

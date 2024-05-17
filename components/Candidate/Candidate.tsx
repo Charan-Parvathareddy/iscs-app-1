@@ -154,7 +154,7 @@ export function Candidate() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const apiUrl = `https://deployfastapi.azurewebsites.net/recruitment_data_view/?column_name=${columnName}&user_name=${userName}&enter_data=${enterData}`;
+      const apiUrl = `https://iscsfastapi.azurewebsites.net/recruitment_data_view/?column_name=${columnName}&user_name=${userName}&enter_data=${enterData}`;
       const res = await fetch(apiUrl);
       if (!res.ok) {
         throw new Error('Failed to fetch data');
