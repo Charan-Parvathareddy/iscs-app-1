@@ -1,21 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import  Modal  from "./Modal";
+
+interface FormData {
+  Name_of_Candidate: string;
+  Skill_Technology: string;
+  Mobile_No: string;
+  Email_ID: string;
+  Recruiter: string;
+}
 
 export function AddCandidate() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     Name_of_Candidate: "",
     Skill_Technology: "",
     Mobile_No: "",
     Email_ID: "",
     Recruiter: ""
   });
+  const [error, setError] = useState<string>("");
+  const [success, setSuccess] = useState<string>("");
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const validateForm = (): string => {
+    const { Name_of_Candidate, Skill_Technology, Mobile_No, Email_ID, Recruiter } = formData;
+    if (!Name_of_Candidate || !Skill_Technology || !Mobile_No || !Email_ID || !Recruiter) {
+      return "All fields are required.";
+    }
+    const mobileRegex = /^[0-9]{10}$/;
+    if (!mobileRegex.test(Mobile_No)) {
+      return "Invalid mobile number. It should be a 10-digit number.";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(Email_ID)) {
+      return "Invalid email address.";
+    }
+    return "";
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form submitted", formData);
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      setSuccess("");
+      return;
+    }
+    setError("");
 
     try {
       const response = await fetch("https://iscsfastapi.azurewebsites.net/Record", {
@@ -28,16 +62,24 @@ export function AddCandidate() {
       });
 
       if (response.ok) {
-        console.log("Data sent successfully");
+        setSuccess("Data sent successfully");
+        setIsModalVisible(true);
+        setFormData({
+          Name_of_Candidate: "",
+          Skill_Technology: "",
+          Mobile_No: "",
+          Email_ID: "",
+          Recruiter: ""
+        });
       } else {
-        console.error("Failed to send data:", response.statusText);
+        setError("Failed to send data: " + response.statusText);
       }
     } catch (error) {
-      console.error("Error:", error);
+      setError("Error: " + (error as Error).message);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
   };
@@ -54,24 +96,27 @@ export function AddCandidate() {
       <form className="my-8" onSubmit={handleSubmit}>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="Name_of_Candidate">Full Name</Label>
-          <Input id="Name_of_Candidate" placeholder="Enter Candidate's Name" type="text" onChange={handleChange} />
+          <Input id="Name_of_Candidate" value={formData.Name_of_Candidate} placeholder="Enter Candidate's Name" type="text" onChange={handleChange} />
         </LabelInputContainer>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="Skill_Technology">Skill/Technology</Label>
-          <Input id="Skill_Technology" placeholder="Enter Skill/Technology" type="text" onChange={handleChange} />
+          <Input id="Skill_Technology" value={formData.Skill_Technology} placeholder="Enter Skill/Technology" type="text" onChange={handleChange} />
         </LabelInputContainer>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="Mobile_No">Mobile Number</Label>
-          <Input id="Mobile_No" placeholder="Enter Mobile Number" type="text" onChange={handleChange} />
+          <Input id="Mobile_No" value={formData.Mobile_No} placeholder="Enter Mobile Number" type="text" onChange={handleChange} />
         </LabelInputContainer>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="Email_ID">Email Address</Label>
-          <Input id="Email_ID" placeholder="Enter Email Address" type="email" onChange={handleChange} />
+          <Input id="Email_ID" value={formData.Email_ID} placeholder="Enter Email Address" type="email" onChange={handleChange} />
         </LabelInputContainer>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="Recruiter">Recruiter</Label>
-          <Input id="Recruiter" placeholder="Enter Recruiter Name" type="text" onChange={handleChange} />
+          <Input id="Recruiter" value={formData.Recruiter} placeholder="Enter Recruiter Name" type="text" onChange={handleChange} />
         </LabelInputContainer>
+
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {success && <p className="text-green-500 text-sm">{success}</p>}
 
         <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
 
@@ -85,6 +130,12 @@ export function AddCandidate() {
 
         <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
       </form>
+
+      <Modal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        recruiter={formData.Recruiter}
+      />
     </div>
   );
 }
@@ -110,4 +161,5 @@ const LabelInputContainer = ({
       {children}
     </div>
   );
+
 };
